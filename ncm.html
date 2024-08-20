@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<link rel="icon" type="image/x-icon" href="/favicon_att.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>CLASSIFICADOR FISCAL - NCM</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+            width: 100%;
+            table-layout: auto;
+        }
+        .tabela-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            overflow-y: auto;
+            height: calc(100vh - 200px);
+            margin-top: 20px;
+            padding-top: 60px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        table.purpleHorizon {
+            border: 2px solid #0a0909;
+            background-color: black;
+            width: 100%;
+            text-align: center;
+            border-collapse: collapse;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        table.purpleHorizon td, table.purpleHorizon th {
+            border: 2px solid #232323;
+            padding: 5px 2px;
+            color: #ffffff;
+        }
+        table.purpleHorizon tbody td {
+            font-size: 12px;
+            font-weight: bold;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+        table.purpleHorizon tr:nth-child(even) {
+            background: black;
+        }
+        table.purpleHorizon thead {
+            background: linear-gradient(to bottom, #f78340 0%, #f56a1a 66%, #000000 100%);
+        }
+        table.purpleHorizon thead th {
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffffff;
+            text-align: center;
+            border-left: 2px solid #7f5a09;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+        table.purpleHorizon thead th:first-child {
+            border-left: none;
+        }
+        table.purpleHorizon tfoot {
+            font-size: 13px;
+            font-weight: bold;
+            color: #ffffff;
+            background: #fa8709;
+            background: linear-gradient(to bottom, #fba546 0%, #fa9321 66%, #fa8709 100%);
+        }
+        table.purpleHorizon tfoot td {
+            background: black;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+            background-image: url("/GTIN.png");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            overflow-y: auto;
+        }
+        button {
+            width: 180px;
+            font-size: 16px;
+            height: 40px;
+            border: none;
+            background: linear-gradient(to bottom, #f45a01, #ffa500);
+            border-color: #020305;
+            border-radius: 20px;
+            border-bottom: 2px solid #232323;
+            padding-top: 5px;
+            cursor: pointer;
+            margin: 5px;
+            z-index: 1000;
+        }
+        input {
+            width: 300px;
+            height: 30px;
+            border-radius: 20px;
+            border-color: #020305;
+            text-align: center;
+            margin: 5px;
+        }
+        .container {
+            width: 100%;
+            max-width: none;
+            padding: 20px;
+            margin: 0 auto;
+            padding-top: 0;
+        }
+        h1 {
+            margin: 0;
+            padding: 20px 0;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            background-color: transparent;
+            z-index: 1;
+        }
+        .mouseHand {
+            cursor: pointer;
+        }
+        .growing-search {
+            padding: 5px 5px 5px 7px;
+            border-radius: 5px;
+            background: #fff;
+        }
+        .growing-search div {
+            display: inline-block;
+            font-size: 12px;
+        }
+        .growing-search .input input {
+            margin-right: 0;
+            border: none;
+            font-size: inherit;
+            transition: width 200ms;
+            padding-top: 5px;
+            padding-left: 5px;
+            padding-bottom: 5px;
+            width: 125px;
+            color: #232323;
+            border-bottom: 2px solid #232323;
+        }
+        .growing-search .input input:focus {
+            width: 150px;
+        }
+        .growing-search .submit button {
+            margin-left: 0;
+            border: none;
+            font-size: 1.15em;
+            color: #aaa;
+            background-color: #fff;
+            padding-top: 2px;
+            padding-bottom: 2px;
+            transition: color 200ms;
+        }
+        .growing-search .input input:hover,
+        .growing-search .submit button:hover {
+            cursor: pointer;
+        }
+        .growing-search .input input:focus,
+        .growing-search .submit button:focus {
+            outline: none;
+        }
+        .growing-search .submit button:hover {
+            color: #3498db;
+        }
+        .paginas {
+            color: white;
+        }
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 7vh;
+        }
+        .pagination-list {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            gap: 5px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+        }
+        .page-item {
+            margin: 0 2px;
+        }
+        .page-item a, .page-item button {
+            width: 80px;
+            height: 30px;
+            padding: 2px 2px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            background: linear-gradient(to bottom, #FFA500, #F45A01);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            text-decoration: none;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+        .page-item a:hover, .page-item button:hover {
+            background: linear-gradient(to bottom, #F56A1A, #D45000);
+            cursor: pointer;
+        }
+        .page-item.disabled a, .page-item.disabled button {
+            background: grey;
+            cursor: not-allowed;
+        }
+        .page-item.active a {
+            background: #232323;
+            pointer-events: none;
+        }
+        .scroll-container {
+            max-height: 600px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            width: 100%;
+            margin-top: 130px;
+        }
+        .table-responsive {
+            width: 100%;
+            overflow-x: hidden;
+        }
+        #tabelaPrincipal {
+            min-width: 100%;
+            width: 100%;
+            table-layout: fixed;
+        }
+        #tabelaPrincipal th, #tabelaPrincipal td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+            vertical-align: middle;
+            overflow-wrap: break-word;
+        }
+        .col-codigo {
+            min-width: 80px;
+        }
+        .col-descricao {
+            min-width: 100px;
+        }
+        .col-ncm,
+        .col-cest,
+        .col-cfop,
+        .col-cst-entrada,
+        .col-cst-saida,
+        .col-aliq-cofins,
+        .col-aliq-pis,
+        .col-cst-csosn,
+        .col-natrec,
+        .col-alq {
+            min-width: 60px;
+            word-wrap: break-word;
+        }
+        .hidden {
+            display: none;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 15px;
+            left: 10px;
+            background: white;
+            border: none;
+            width: 70px;
+            height: 40px;
+            z-index: 1000;
+            cursor: pointer;
+        }
+        .back-button i {
+            color: #000;
+        }
+        
+        select.form-control {
+            width: 300px;
+            max-width: 400px;
+            height: 30px;
+            padding: 5px 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffffff;
+            background: linear-gradient(to bottom, #f45a01, #ffa500);
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            text-align: center;
+            cursor: pointer;
+            margin: 10px auto;
+        }
+        
+        select.form-control option {
+            background-color: #ffffff;
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        /* Estilo para a seta */
+        select.form-control::-ms-expand {
+            display: none;
+        }
+        
+        select.form-control::after {
+            content: '\25BC'; /* Seta para baixo */
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            color: #ffffff;
+            font-size: 20px;
+            pointer-events: none;
+        }
+        
+        /* Container do select para posicionar a seta */
+        .select-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .select-container::after {
+            content: '\25BC'; /* Seta para baixo */
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            color: #ffffff;
+            font-size: 20px;
+            pointer-events: none;
+        }
+        
+        /* Botão de volta */
+        .back-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            font-size: 8px;
+        }
+        
+        /* Esconder input e botão de pesquisar */
+        #gtinInput,
+        #pesquisarButton {
+            display: none;
+        }
+        
+        /* Estilo para o botão Salvar Informações */
+        #salvarButton {
+            width: 200px;
+            height: 40px;
+            border: none;
+            background: linear-gradient(to bottom, #f45a01, #ffa500);
+            border-radius: 20px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 20px auto;
+            cursor: pointer;
+            display: block;
+        }
+        
+        #salvarButton:disabled {
+            background: grey;
+            cursor: not-allowed;
+        }
+
+        /* Centralização dos campos de input e botão de pesquisar */
+        #inputContainer,
+        #buttonContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed-top" id="header">
+        <div class="container">
+            <button class="back-button" onclick="voltar()">
+                <i class="fas fa-arrow-left fa-2x"></i>
+            </button>
+            <h1 style="margin-top: 5px; margin-bottom: -5px; color: white; font-family: Arial;">
+                <label for="gtinInput"><strong>CLASSIFICADOR FISCAL</strong></label>
+            </h1>
+            <div id="campoPesquisa">
+                <div class="select-container">
+                    <select id="atividadeSelect" class="form-control" onchange="checkSelections()">
+                        <option value="" disabled selected>Selecione uma opção</option>
+                        <option value="GERAL">Geral</option>
+                        <option value="ATACADO">Atacado</option>
+                        <option value="CONSTRUCAO">Construção</option>
+                        <option value="INDUSTRIA">Indústria</option>
+                        <option value="FARMA">Farma</option>
+                        <option value="VAREJO">Varejo</option>
+                    </select>
+                </div>
+                <div class="select-container">
+                    <select id="regimeSelect" class="form-control" onchange="checkSelections()">
+                        <option value="" disabled selected>Selecione uma opção</option>
+                        <option value="Simples Nacional">Simples Nacional</option>
+                        <option value="Lucro Real">Lucro Real</option>
+                        <option value="Lucro Presumido">Lucro Presumido</option>
+                    </select>
+                </div>
+                <div class="select-container">
+                    <select id="ufSelect" class="form-control" onchange="checkSelections()">
+                        <option value="" disabled selected>Selecione uma opção</option>
+                        <option value="AC">Acre</option>
+                        <option value="AL">Alagoas</option>
+                        <option value="AP">Amapá</option>
+                        <option value="AM">Amazonas</option>
+                        <option value="BA">Bahia</option>
+                        <option value="CE">Ceará</option>
+                        <option value="DF">Distrito Federal</option>
+                        <option value="ES">Espírito Santo</option>
+                        <option value="GO">Goiás</option>
+                        <option value="MA">Maranhão</option>
+                        <option value="MT">Mato Grosso</option>
+                        <option value="MS">Mato Grosso do Sul</option>
+                        <option value="MG">Minas Gerais</option>
+                        <option value="PA">Pará</option>
+                        <option value="PB">Paraíba</option>
+                        <option value="PR">Paraná</option>
+                        <option value="PE">Pernambuco</option>
+                        <option value="PI">Piauí</option>
+                        <option value="RJ">Rio de Janeiro</option>
+                        <option value="RN">Rio Grande do Norte</option>
+                        <option value="RS">Rio Grande do Sul</option>
+                        <option value="RO">Rondônia</option>
+                        <option value="RR">Roraima</option>
+                        <option value="SC">Santa Catarina</option>
+                        <option value="SP">São Paulo</option>
+                        <option value="SE">Sergipe</option>
+                        <option value="TO">Tocantins</option>
+                    </select>
+                </div>
+            </div>
+            <button id="salvarButton" onclick="salvarInformacoes()" disabled>Salvar Informações</button>
+            <!-- Input e botão de pesquisar escondidos -->
+            <div id="inputContainer" class="hidden">
+                <input type="text" id="gtinInput" name="gtinInput" placeholder="Insira as informações" style="text-align: center;">
+            </div>
+            <div id="buttonContainer" class="hidden">
+                <button type="button" id="pesquisarButton" onclick="pesquisar()">Pesquisar</button>
+            </div>
+        </div>
+    </div>
+    <div class="container" style="margin-top: 70px;">
+        <div id="resultadoPesquisa" class="tabela-container"></div>
+        <div id="paginationContainer" class="pagination-container" style="display: none;">
+            <ul class="pagination-list">
+                <li class="page-item">
+                    <button class="btn-pagination" onclick="previousPage()">Anterior</button>
+                </li>
+                <li class="page-item">
+                    <button class="btn-pagination" onclick="gotoPage(1)">1</button>
+                </li>
+                <li class="page-item">
+                    <button class="btn-pagination" onclick="gotoPage(2)">2</button>
+                </li>
+                <li class="page-item">
+                    <button class="btn-pagination" onclick="gotoPage(3)">3</button>
+                </li>
+                <li class="page-item ellipsis">
+                    <span>...</span>
+                </li>
+                <li class="page-item">
+                    <button class="btn-pagination" onclick="gotoPage(11)">11</button>
+                </li>
+                <li class="page-item">
+                    <button class="btn-pagination" onclick="nextPage()">Próximo</button>
+                </li>
+                <li class="page-item">
+                    <button class="btn-pagination" onclick="fecharBtnFunc()">Fechar</button>
+                </li>
+                <li class="page-item">
+                    <button class="btn-pagination" onclick="Maisinfo()">Mais Info</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" aria-labelledby="loadingModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body text-center" style="max-height: 100px; padding: 20px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Carregando...</span>
+                    </div>
+                    <p style="margin-top: 10px;">Carregando, aguarde por favor...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function voltar() {
+            window.history.back();
+        }
+
+        function pesquisar() {
+            // Implementar a lógica de pesquisa aqui
+        }
+
+        function previousPage() {
+            // Implementar a lógica de paginação aqui
+        }
+
+        function nextPage() {
+            // Implementar a lógica de paginação aqui
+        }
+
+        function gotoPage(pageNumber) {
+            // Implementar a lógica de navegação para a página especificada aqui
+        }
+
+        function fecharBtnFunc() {
+            // Implementar a lógica para fechar o botão aqui
+        }
+
+        function Maisinfo() {
+            // Implementar a lógica para exibir mais informações aqui
+        }
+
+        function checkSelections() {
+            var atividade = document.getElementById("atividadeSelect").value;
+            var regime = document.getElementById("regimeSelect").value;
+            var uf = document.getElementById("ufSelect").value;
+            var salvarButton = document.getElementById("salvarButton");
+
+            if (atividade && regime && uf) {
+                salvarButton.disabled = false;
+            } else {
+                salvarButton.disabled = true;
+            }
+        }
+
+        function salvarInformacoes() {
+            var atividade = document.getElementById("atividadeSelect").value;
+            var regime = document.getElementById("regimeSelect").value;
+            var uf = document.getElementById("ufSelect").value;
+        
+            // Enviar informações para o backend
+            axios.post('/api/salvarInformacoes', {
+                atividade: atividade,
+                regime: regime,
+                uf: uf
+            })
+            .then(response => {
+                console.log('Informações salvas:', response.data);
+            })
+            .catch(error => {
+                console.error('Erro ao salvar informações:', error);
+            });
+        
+            // Mostrar os campos de input e botão de pesquisar
+            document.getElementById("gtinInput").style.display = "block";
+            document.getElementById("pesquisarButton").style.display = "block";
+            document.getElementById("inputContainer").classList.remove("hidden");
+            document.getElementById("buttonContainer").classList.remove("hidden");
+        }
+    </script>
+</body>
+</html>
